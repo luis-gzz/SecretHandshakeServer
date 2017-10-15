@@ -7,6 +7,7 @@ import (
     "net/http"
     //"log"
     "github.com/rs/cors"
+    "github.com/turnage/graw/reddit"
 )
 
 type recievedText struct {
@@ -29,6 +30,18 @@ func GetText(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
+    
+    if err != nil {
+        fmt.Println("Failed to create bot handle: ", err)
+        return
+    }
+
+    err = bot.PostSelf("/r/SecretHandshakeVault", t.Key, t.Post)
+    if err != nil {
+        fmt.Println("Failed to fetch /r/golang: ", err)
+        return
+    }
+
 	fmt.Println(t.Key)
     fmt.Println(t.Post)
 }
@@ -42,18 +55,29 @@ func GetImage(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
+
+    if err != nil {
+        fmt.Println("Failed to create bot handle: ", err)
+        return
+    }
+
+    err = bot.PostSelf("/r/SecretHandshakeVault", i.Key, i.Image[0:10])
+    if err != nil {
+        fmt.Println("Failed to post image ", err)
+        return
+    }
+
 	fmt.Println(i.Key)
     fmt.Println(i.Image)
 }
+
+var bot, err = reddit.NewBotFromAgentFile("redditStuff.agent", 0)
 
 func main() {
     mux := http.NewServeMux()
     mux.HandleFunc("/newText", GetText)
     mux.HandleFunc("/newImage", GetImage)
 
-    // cors.Default() setup the middleware with default options being
-    // all origins accepted with simple methods (GET, POST). See
-    // documentation below for more options.
 
     c := cors.New(cors.Options{
         AllowedOrigins: []string{"*"},
@@ -62,6 +86,10 @@ func main() {
     })
 
 
+
     handler := c.Handler(mux)
     http.ListenAndServe(":3000", handler)
+
+
+
 }
