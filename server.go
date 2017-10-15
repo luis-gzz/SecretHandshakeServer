@@ -30,11 +30,6 @@ func GetText(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-    
-    if err != nil {
-        fmt.Println("Failed to create bot handle: ", err)
-        return
-    }
 
     err = bot.PostSelf("/r/SecretHandshakeVault", t.Key, t.Post)
     if err != nil {
@@ -55,12 +50,6 @@ func GetImage(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-
-    if err != nil {
-        fmt.Println("Failed to create bot handle: ", err)
-        return
-    }
-
     err = bot.PostSelf("/r/SecretHandshakeVault", i.Key, i.Image[0:10])
     if err != nil {
         fmt.Println("Failed to post image ", err)
@@ -71,7 +60,7 @@ func GetImage(w http.ResponseWriter, req *http.Request) {
     fmt.Println(i.Image)
 }
 
-var bot, err = reddit.NewBotFromAgentFile("redditStuff.agent", 0)
+var bot, errBot = reddit.NewBotFromAgentFile("redditStuff.agent", 0)
 
 func main() {
     mux := http.NewServeMux()
@@ -85,7 +74,10 @@ func main() {
         AllowCredentials: true,
     })
 
-
+    if errBot  != nil {
+        fmt.Println("Failed to create bot handle: ", errBot)
+        return
+    }
 
     handler := c.Handler(mux)
     http.ListenAndServe(":3000", handler)
