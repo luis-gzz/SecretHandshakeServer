@@ -8,6 +8,8 @@ import (
     "os"
     "github.com/rs/cors"
     "github.com/turnage/graw/reddit"
+    "math"
+    "time"
 )
 
 type recievedText struct {
@@ -125,16 +127,27 @@ func GetImage(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
     
- //   i.Key = string(Encode([]uint8(i.Key), GetKey("E.txt") ))
-   // i.Image = string(Encode([]uint8(i.Image), GetKey("E.txt") ))
-    err = bot.PostSelf("/r/SecretHandshakeVault", i.Key, i.Image[0:10])
+    ekey := GetKey("E.txt")
+    
+    i.Key = string(Encode([]uint8(i.Key), ekey ))
+    err = bot.PostSelf("/r/SecretHandshakeVault", i.Key, string(Encode([]uint8(i.Image[0:5000]), ekey )))
+    time.Sleep(7000*time.Millisecond)
+    fmt.Println("hey ho let's go!")
+    harvest, err := bot.Listing("/r/SecretHandshakeVault", "")
     if err != nil {
-        fmt.Println("Failed to post image ", err)
+        fmt.Println("Failed to fetch /r/golang: ", err)
         return
     }
-
+    parentPost := harvest.Posts[0]
+    for k := 1; k < int(math.Ceil(float64(len(i.Image) / 5000))); k++ {
+        err = bot.Reply(parentPost.Name, string(Encode([]uint8(i.Image[k*5000:k*5000+5000]),ekey)))
+        if err != nil {
+            fmt.Println("Failed to post image ", err)
+            return
+        }
+    }
 	fmt.Println(i.Key)
-    fmt.Println(i.Image)
+    fmt.Println(len(i.Image))
 }
 
 var bot, errBot = reddit.NewBotFromAgentFile("redditStuff.agent", 0)
