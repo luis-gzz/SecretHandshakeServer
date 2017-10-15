@@ -10,6 +10,7 @@ import (
     "github.com/turnage/graw/reddit"
     "math"
     "time"
+    //"io"
 )
 
 type recievedText struct {
@@ -20,6 +21,10 @@ type recievedText struct {
 type recievedImage struct {
 	Key string
     Image string
+}
+
+type retrieval struct {
+	Key string
 }
 
 func GetKey(fileName string) []uint8 {
@@ -48,19 +53,19 @@ func GetKey(fileName string) []uint8 {
     }
     //fmt.Println(key)
     return key
-    
-    
+
+
 }
 
 func Encode(arr []uint8, key []uint8) []uint8 {
     for i := range arr {
         if arr[i] >= 97 && arr[i] <= 122 {
-            arr[i] += key[i]   
+            arr[i] += key[i]
             if arr[i] > 122 {
                 arr[i] -= 26
             }
         } else if arr[i] >= 65 && arr[i] <= 90 {
-            arr[i] += key[i]   
+            arr[i] += key[i]
             if arr[i] > 90 {
                 arr[i] -= 26
             }
@@ -70,7 +75,7 @@ func Encode(arr []uint8, key []uint8) []uint8 {
                 arr[i] -= 10
             }
         }
-        
+
     }
     return arr
 }
@@ -105,7 +110,7 @@ func GetText(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-    
+
     t.Key = string(Encode([]uint8(t.Key), GetKey("E.txt") ))
     t.Post = string(Encode([]uint8(t.Post), GetKey("E.txt") ))
     err = bot.PostSelf("/r/SecretHandshakeVault", t.Key, t.Post)
@@ -118,6 +123,52 @@ func GetText(w http.ResponseWriter, req *http.Request) {
     fmt.Println(t.Post)
 }
 
+
+func Retrieve(w http.ResponseWriter, req *http.Request) {
+
+    decoder := json.NewDecoder(req.Body)
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+
+    var i retrieval
+	err := decoder.Decode(&i)
+    theKey := i.Key
+	if err != nil {
+		panic(err)
+	}
+
+    ekey := GetKey("E.txt")
+    retrieveKey := string(Encode([]uint8(theKey), ekey))
+
+    harvest, err := bot.Listing("/r/SecretHandshakeVault", "")
+    if err != nil {
+        fmt.Println("Failed to fetch /r/golang: ", err)
+        return
+    }
+
+    var postText string
+    for _, items := range harvest.Posts {
+       if retrieveKey == items.Title {
+           postText = items.SelfText
+           //fmt.Println(items.SelfText)
+       }
+    }
+    fmt.Println(req.Host)
+    postText = string(Decode([]uint8(postText), ekey))
+    fmt.Println(postText)
+    i.Key = postText;
+    postJson, err := json.Marshal(i)
+    if err != nil {
+        panic(err)
+    }
+    //fmt.Println(i.Key)
+    //json.NewEncoder(w).Encode(i)
+    w.Write(postJson)
+
+    //fmt.Println(w)
+
+}
+
 func GetImage(w http.ResponseWriter, req *http.Request) {
     decoder := json.NewDecoder(req.Body)
 
@@ -126,11 +177,12 @@ func GetImage(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-    
+
     ekey := GetKey("E.txt")
-    
+
     i.Key = string(Encode([]uint8(i.Key), ekey ))
     err = bot.PostSelf("/r/SecretHandshakeVault", i.Key, string(Encode([]uint8(i.Image[0:5000]), ekey )))
+
     time.Sleep(7000*time.Millisecond)
     fmt.Println("hey ho let's go!")
     harvest, err := bot.Listing("/r/SecretHandshakeVault", "")
@@ -156,6 +208,7 @@ func main() {
     mux := http.NewServeMux()
     mux.HandleFunc("/newText", GetText)
     mux.HandleFunc("/newImage", GetImage)
+    mux.HandleFunc("/retrieve", Retrieve)
 
 
     c := cors.New(cors.Options{
@@ -171,6 +224,6 @@ func main() {
 
     handler := c.Handler(mux)
     http.ListenAndServe(":3000", handler)
-    
+
 
 }
