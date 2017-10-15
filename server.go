@@ -33,11 +33,11 @@ func GetKey(fileName string) []uint8 {
         log.Fatal(err)
     }
     b1 := make([]byte, 1)
-    key := make([]byte, 10000)
+    key := make([]byte, 300000)
     for i := range key {
         _, err = f.Read(b1)
         if err != nil {
-            log.Fatal(err)
+            fmt.Println("ya fucked", err)
         }
         if b1[0] - 48 <= 9 {
             key[i] = b1[0] - 48
@@ -147,15 +147,29 @@ func Retrieve(w http.ResponseWriter, req *http.Request) {
     }
 
     var postText string
-    for _, items := range harvest.Posts {
+    var postNum int
+    for index, items := range harvest.Posts {
        if retrieveKey == items.Title {
            postText = items.SelfText
+           postNum = index
            //fmt.Println(items.SelfText)
        }
     }
-    fmt.Println(req.Host)
-    postText = string(Decode([]uint8(postText), ekey))
-    fmt.Println(postText)
+    if int(harvest.Posts[postNum].NumComments) > 0 {
+        harvest1, err := bot.Listing("/r/SecretHandshakeVault/comments/" + harvest.Posts[postNum].ID, "")
+        if err != nil {
+            fmt.Println("Failed to fetch the post: ", err)
+            return
+        }
+        for _, comment := range harvest1.Posts[0].Replies {
+            postText += comment.Body
+            
+        }
+        
+        postText = string(Decode([]uint8(postText),ekey))
+        fmt.Println(postText)
+    }     
+    
     i.Key = postText;
     postJson, err := json.Marshal(i)
     if err != nil {
