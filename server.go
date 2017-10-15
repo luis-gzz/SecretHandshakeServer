@@ -163,13 +163,14 @@ func Retrieve(w http.ResponseWriter, req *http.Request) {
         }
         for _, comment := range harvest1.Posts[0].Replies {
             postText += comment.Body
-            
+
         }
-        
-        postText = string(Decode([]uint8(postText),ekey))
+
+        postText = postText;
+        //postText = string(Decode([]uint8(postText),ekey))
         fmt.Println(postText)
-    }     
-    
+    }
+    postText = string(Decode([]uint8(postText),ekey))
     i.Key = postText;
     postJson, err := json.Marshal(i)
     if err != nil {
