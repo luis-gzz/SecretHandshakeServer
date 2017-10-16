@@ -121,6 +121,7 @@ func SetImage(w http.ResponseWriter, req *http.Request) {
             }
             if err != nil {
                 fmt.Println("Failed to post image ", err)
+                return
             }
 
         }
@@ -177,7 +178,6 @@ func Retrieve(w http.ResponseWriter, req *http.Request) {
         fmt.Println(postText)
     }
 
-    \
 
     //postText = string(Decode([]uint8(postText),ekey))
     i.Key = postText;
@@ -198,7 +198,7 @@ func Retrieve(w http.ResponseWriter, req *http.Request) {
 
 
 
-var bot, errBot = reddit.NewBotFromAgentFile("redditStuff.agent", 0)
+var bot, errBot = reddit.NewBotFromAgentFile("bot.agent", 0)
 
 func main() {
     mux := http.NewServeMux()
