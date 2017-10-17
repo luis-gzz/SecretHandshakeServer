@@ -17,6 +17,6 @@ The "database" we used during HackGT
 To use you will need to replace all instances of /r/SecretHandshakeVault in the server code with the subreddit you would like to use. You will also need to setup a reddit script and .agent file (the code requires one named bot.agent). Since this project uses graw (Go Reddit API Wrapper) the instruction about registration on their [gitbook](https://turnage.gitbooks.io/graw/content/) will be helpful.
 
 Place all files from this repository into a directory along with the .agent file you created. And from within that folder's directory run 
-  `go run server.go encrypt.go` within the command line. The [SecretHandshake website](https://luis-gzz.github.io/SecretHandshake/) should be set up to point to localhost:3000 which the go script should automatically run in. 
+  `go run server.go encrypt.go` within the command line. The [SecretHandshake website](https://luis-gzz.github.io/SecretHandshake/) should be set up to point to localhost:3000 which the go script should automatically run in. You might need to load unsafe scripts as I haven't fixed a cross http/https network issue.
   
 From here you can upload text and images(no large image file support) and you can retrieve text; image retrieval sort of works but still needs some work.
