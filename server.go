@@ -44,6 +44,7 @@ func SetText(w http.ResponseWriter, req *http.Request) {
         err = bot.PostSelf("/r/SecretHandshakeVault", t.Key, string(Encode([]uint8(t.Post[0:5000]), ekey )))
         postLen = postLen - 5000;
         fmt.Println("post self", postLen)
+
         // Sleep to allow the parent post to be avaliable
         //Harvest the available posts and use the parent
         time.Sleep(7000*time.Millisecond)
@@ -57,19 +58,16 @@ func SetText(w http.ResponseWriter, req *http.Request) {
         //Post the remainder of the image in the comments
         for k := 1; k < int(math.Ceil(float64(len([]rune(t.Post))) / 5000)); k++ {
 
-            if (postLen > 4999){
-                err = bot.Reply(parentPost.Name, string(Encode([]uint8(t.Post[k*5000:k*5000+5000+1]),ekey)))
+            if (postLen > 5000){
+                err = bot.Reply(parentPost.Name, string(Encode([]uint8(t.Post[k*5000:(k*5000)+5000]),ekey)))
                 postLen = postLen - 5000;
                 fmt.Println(k, postLen)
-                if err != nil {
-                    fmt.Println("Failed to post image 1" + string(k), err)
-                }
+
             } else {
                 err = bot.Reply(parentPost.Name, string(Encode([]uint8(t.Post[k*5000:]),ekey)))
-                if err != nil {
-                    fmt.Println("Failed to post image 2", err)
-                }
-
+            }
+            if err != nil {
+                fmt.Println("Failed to post text", err)
             }
 
             //time.Sleep(500*time.Millisecond)
@@ -119,22 +117,17 @@ func SetImage(w http.ResponseWriter, req *http.Request) {
 
             fmt.Println(len([]rune(i.Image)))
             if (postLen > 5000){
-                err = bot.Reply(parentPost.Name, string(Encode([]uint8(i.Image[k*5000:k*5000+5000+1]),ekey)))
+                err = bot.Reply(parentPost.Name, string(Encode([]uint8(i.Image[k*5000:(k*5000)+5000]),ekey)))
                 postLen = postLen - 5000;
-                if err != nil {
-                    fmt.Println("Failed to post reply image", err)
-                    return
-                }
+
             } else {
                 err = bot.Reply(parentPost.Name, string(Encode([]uint8(i.Image[k*5000:]),ekey)))
-                if err != nil {
-                    fmt.Println("Failed to post image  last reply", err)
-                    return
-                }
-
             }
 
-
+            if err != nil {
+                fmt.Println("Failed to post image ", err)
+                return
+            }
         }
 
     } else {
@@ -186,7 +179,7 @@ func Retrieve(w http.ResponseWriter, req *http.Request) {
 
         //postText = postText;
         //postText = string(Decode([]uint8(postText),ekey))
-        fmt.Println(postText)
+        //fmt.Println(postText)
     }
 
 
